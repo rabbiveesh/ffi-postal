@@ -1,0 +1,83 @@
+#!/usr/bin/env perl
+
+package Hashes::Options;
+use FFI::Platypus::Record;
+
+record_layout( qw/
+    bool with_name
+    bool with_address
+    bool with_unit
+    bool with_city_or_equivalent
+    bool with_small_containing_boundaries
+    bool with_postal_code
+    bool with_latlon
+    double latitude
+    double longitude
+    uint32 geohash_precision
+    bool name_and_address_keys
+    bool name_only_keys
+    bool address_only_keys
+/);
+
+
+package Parser::Options;
+use FFI::Platypus::Record;
+
+record_layout( qw/
+
+
+/)
+
+package main;
+use FFI::Platypus;
+use v5.22;
+use Carp;
+
+use Pry;
+
+my $ffi = FFI::Platypus->new( api => 1);
+$ffi->lib('libpostal.so');
+$ffi->type("record(Hashes::Options)" => 'hash_options');
+
+
+$ffi->attach( [ libpostal_setup => 'setitup' ] => [], 'bool');
+$ffi->attach( [ libpostal_setup_language_classifier => 'setuplang' ]
+  => [], 'bool');
+$ffi->attach( [ libpostal_setup_parser => 'setupparse' ] => [], 'bool');
+
+$ffi->attach( 
+  [ libpostal_get_near_dupe_hash_default_options => 'hash_defaults' ], 
+  [ ], 'hash_options');
+
+sub get_varied_str_array {
+  my ($inner, @args) = @_;
+  my $ret_ptr = 
+    $inner->(@args, \my $ret_len);
+  return () unless $ret_len;
+  return $ffi->cast( opaque => "string[$ret_len]", $ret_ptr);
+}
+
+$ffi->attach( [ libpostal_near_dupe_hashes => 'near_dupes' ],
+  [ 'size_t', 'string[]', 'string[]', 'hash_options', 'size_t*' ],
+  'opaque', \&get_varied_str_array
+);
+
+$ffi->attach(
+  [ libpostal_near_dupe_hashes_languages => 'near_dupes_languages' ],
+  [ size_t => 'string[]', 'string[]', 'hash_options',
+    size_t => 'string[]', 'size_t*' ],
+  'opaque', \&get_varied_str_array
+);
+
+
+setitup();
+setuplang();
+
+my $opts = hash_defaults();
+$opts->address_only_keys(1);
+for (1..10) {
+  my @hashes = near_dupes( [qw/ house_number road city state /], 
+       ['555', 'your face ln', 'cleveland hts', 'ohio' ], $opts);
+}
+
+
