@@ -50,7 +50,9 @@ $ffi->attach(
 
 =method EXPANSION FUNCTIONS 
 
-=method my $opts = expansion_defaults;
+=method expansion_defaults
+
+    my $options = expansion_defaults;
 
 Returns a raw C struct suitable to be passed to the expansion
 functions. Not intended to be used directly.
@@ -60,7 +62,9 @@ $ffi->attach(
   [ libpostal_get_default_options => 'expansion_defaults' ],
   [], 'expansion_options', );
 
-=method destroy_expansions( char** $array_ptr, $array_len )
+=method destroy_expansions
+
+    destroy_expansions( char** $array_ptr, $array_len )
 
 Walks through a C array of strings, freeing all members and then
 finally the array itself. Not intended to be used directly.
@@ -87,7 +91,9 @@ sub process_expansions {
   process_char_pp(@_);
 }
 
-=method my @expansion = expand_address( $address, $options? )
+=method expand_address
+
+    my @expansion = expand_address( $address, $options? )
 
 Returns a list of possible expansions for the $address. This may
 give you some ridiculous results, like dr expanding out to doctor in
@@ -107,7 +113,9 @@ $ffi->attach(
   [ 'string', 'expansion_options', 'size_t*' ], 
   'opaque', \&process_expansions );
 
-=method my @expansion_roots = expand_address_roots( $address, $options? )
+=method expand_address_root
+
+    my @expansion_roots = expand_address_roots( $address, $options? )
 
 Similar to expand_address, but instead of expanding suspects, it
 will just drop out items that could be ommited. That means instead
@@ -126,7 +134,9 @@ $ffi->attach(
 
 =method NEAR DUPE HASHING FUNCTIONS
 
-=method my $hashes_options = hash_defaults
+=method hash_defaults
+
+    my $hashes_options = hash_defaults
 
 Returns a C struct representing the default options for the generation of near dupe hashes. Not intended to be used directly.
 
@@ -136,22 +146,77 @@ $ffi->attach(
   [ libpostal_get_near_dupe_hash_default_options => 'hash_defaults' ], 
   [ ], 'hash_options');
 
-sub process_near_dupes {
-  #fourth arg is the options
-  $_[3] //= hash_defaults();
-  process_char_pp(@_)
-}
+=method near_dupes
+
+    my @near_dupe_hashes = near_dupes \@labels, \@values, $options?
+
+Returns hashes suitable for grouping suspiciously similar
+addresses.  The format for the address is two arrayrefs, one of
+labels and the other of corresponding values, as returned by
+parse_address (or at least with the same labels).
+
+If you pass undef or nothing as the third argument, the default
+options will be used. This defaults to returning
+name_and_address_keys, which means for a lot of addresses (unless
+they have a 'house' label) you'll get back nothing. See the
+options docs for more information.
+
+Low level documentation for the options is available in 
+L<Geo::Postal::Structs::Hashes>.
+
+Language detection will be performed on the address in question,
+and then expansions will include terms from all relevant
+dictionaries.
+
+=cut
 
 $ffi->attach( [ libpostal_near_dupe_hashes => 'near_dupes' ],
   [ 'size_t', 'string[]', 'string[]', 'hash_options', 'size_t*' ],
-  'opaque', \&process_near_dupes
+  'opaque', 
+  sub {
+    my $inner = shift;
+    unshift @_, scalar @{$_[0]};
+    push @_, hash_defaults() unless $_[3];
+    process_char_pp($inner, @_);
+  }
 );
+
+=method near_dupes_languages
+
+    my @hashes = near_dupes_languages \@labels, \@values, $options?, \@langs
+
+Returns hashes suitable for grouping suspiciously similar
+addresses.  The format for the address is two arrayrefs, one of
+labels and the other of corresponding values, as returned by
+parse_address (or at least with the same labels).
+
+If you omit the third argument, then the default options
+will be used.
+
+Low level documentation for the options is available in 
+L<Geo::Postal::Structs::Hashes>.
+
+The hashes will only use terms from the languages provided in
+\@langs.
+
+=cut
 
 $ffi->attach(
   [ libpostal_near_dupe_hashes_languages => 'near_dupes_languages' ],
   [ size_t => 'string[]', 'string[]', 'hash_options',
     size_t => 'string[]', 'size_t*' ],
-  'opaque', \&process_near_dupes
+  'opaque',
+  sub {
+    my $inner = shift;
+    #put in length of keys/values
+    unshift @_, scalar @{$_[0]};
+    my $langs = pop;
+    #put in default options if not supplied
+    push @_, hash_defaults() unless $_[3];
+    #put in length of language list
+    push @_, 0 + @$langs, $langs;
+    process_char_pp($inner, @_);
+  }
 );
 
 our @EXPORT = 

@@ -27,22 +27,57 @@ subtest 'expansions' => sub {
 };
 
 subtest 'near dupe hashes' => sub {
-  my @labels = ( 5, [ qw/ house_number road city state postcode /] );
+  my $labels = [ qw/ house_number road city state postcode /];
+  my $values = [ 555, 'your face ln', 'cleveland hts', 'oh', 44118  ];
   my $opts = hash_defaults;
   $opts->address_only_keys(1);
-  is [ near_dupes @labels => 
-       [ 555, 'your face ln', 'cleveland hts', 'oh', 44118  ],
-       $opts ],
+
+  is [ near_dupes $labels => $values, $opts ],
      [ 'act|your face lane|555|cleveland heights',
        'act|your face line|555|cleveland heights',
-       'act|yourface|555|cleveland heights' ],
+       'act|yourface|555|cleveland heights',
+       'apc|your face lane|555|44118',
+       'apc|your face line|555|44118',
+       'apc|yourface|555|44118',
+     ],
      'near dupes returns correctly!';
 
-  is [ near_dupes @labels,
+  is [ near_dupes_languages $labels => $values, $opts, [ 'ja' ] ],
+     [ 'act|your face ln|555|cleveland hts',
+       'apc|your face ln|555|44118',
+     ],
+     'near dupes w/ langs, no english returns correctly!';
+
+  is [ near_dupes_languages $labels => $values, $opts, [ 'ja', 'en', ] ],
+     [ 
+       'act|your face ln|555|cleveland hts',
+       'act|your face ln|555|cleveland heights',
+       'act|your face lane|555|cleveland hts',
+       'act|your face lane|555|cleveland heights',
+       'act|your face line|555|cleveland hts',
+       'act|your face line|555|cleveland heights',
+       'act|yourface|555|cleveland hts',
+       'act|yourface|555|cleveland heights',
+       'apc|your face ln|555|44118',
+       'apc|your face lane|555|44118',
+       'apc|your face line|555|44118',
+       'apc|yourface|555|44118',
+     ],
+     'near dupes w/ 2 langs returns correctly!';
+
+  is [ near_dupes $labels, $values ], [], 'near_dupes uses defaults';
+  is [ near_dupes_languages $labels, $values, ['en'] ], [], 
+    'near_dupes_languages uses defaults';
+
+  is [ near_dupes $labels,
        [ 'nine ninety nine', 'ave rd', 'aurora', 'california', '55223'],
       $opts ],
    [ 'act|avenue road|999|aurora',
-     'act|avenue|999|aurora'],
+     'act|avenue|999|aurora',
+     'apc|avenue road|999|55223',
+     'apc|avenue|999|55223',
+
+   ],
    'gets another one';
 
 };
