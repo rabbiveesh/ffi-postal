@@ -21,7 +21,26 @@ subtest 'expansions' => sub {
        "555 your face cleveland oh 44118" ],
      'roots returns as expected';
 
+  is $ex_def->langs, undef, 'empty langs is undef';
 
+  subtest 'Language Options' => sub {
+    isa_ok my $ref = $ex_def->languages(qw/ en ja /), 
+      ['FFI::Platypus::Record::StringArray'],
+      'the languages mutator returns the correct ref';
+    is $ref->size, 2, 'array reports correct size';
+    is $ref->element(0), 'en', 'returns right string';
+    is $ref->element(1), 'ja', 'and second one too';
+
+    is ffi->cast( opaque => 'string[2]', $ref->opaque), [ qw/ en ja / ],
+      'the array correctly represents our strings on roundtrip';
+
+    is [ expand_address_root $check_addr, $ex_def ], 
+       [ "555 your face cleveland ohio 44118",
+         "555 your face cleveland oh 44118",
+         '555 your face dr cleveland hts oh 44118',
+       ],
+       'roots returns as expected when accounting for lang w/o expansion';
+  };
   #TODO- add testing for when we do pass in options. Or maybe
   #we'll do that later when we have a saner interface for it?
 };
@@ -81,5 +100,6 @@ subtest 'near dupe hashes' => sub {
    'gets another one';
 
 };
+
 
 done_testing;

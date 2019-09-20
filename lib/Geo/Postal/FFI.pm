@@ -33,9 +33,11 @@ my $ffi = ffi;
 
 $ffi->lib(find_lib_or_die lib => 'postal');
 
+# Type Definitions
 $ffi->type("record(Geo::Postal::Structs::Hashes)" => 'hash_options');
 $ffi->type("record(Geo::Postal::Structs::Expansions)" => 'expansion_options');
-
+$ffi->type("record(Geo::Postal::Structs::Parser)" => 'parser_options');
+$ffi->type("record(Geo::Postal::Structs::ParserResponse)" => 'parser_response');
 
 
 $ffi->function(libpostal_setup => [], 'bool')->call;
@@ -43,10 +45,6 @@ $ffi->function(libpostal_setup => [], 'bool')->call;
 
 $ffi->function(libpostal_setup_language_classifier  => [], 'bool')->call;
 
-#TODO- move this to lazy load itself whenever we use the parser
-$ffi->attach( 
-  [ libpostal_setup_parser => 'postal_setup_parse' ] 
-  => [], 'bool');
 
 =method EXPANSION FUNCTIONS 
 
@@ -219,8 +217,51 @@ $ffi->attach(
   }
 );
 
+=method ADDRESS PARSING FUNCTIONS
+
+=method parser_defaults
+
+Returns a C struct representing the default options for the
+parsing an address. Not intended to be used directly.
+
+=cut
+
+$ffi->attach( [ libpostal_get_address_parser_default_options => 'parser_defaults' ], [], 'parser_options');
+
+$ffi->attach( [ libpostal_address_parser_response_destroy => 'destroy_parsings' ], [ 'parser_response*' ], );
+
+=method parse_address
+
+  my @labels_and_values = parse_address($address, $options?)
+
+=cut
+
+my $parser_loaded = 0;
+$ffi->attach( [ libpostal_parse_address => 'parse_address' ],
+  [ 'string', 'parser_options' ], 'parser_response*',
+  sub {
+    my ($inner, @args) = @_;
+    $parser_loaded = 
+      $ffi->function( libpostal_setup_parser => [], 'bool')->call
+      unless $parser_loaded;
+    
+    push @args, parser_defaults() if @args == 1;
+    my $ret = $inner->(@args);
+    my $len = $ret->num_conmponents;
+    my $labels = $ffi->cast( 'opaque', "string[$len]", $ret->labels);
+    my $values = $ffi->cast( 'opaque', "string[$len]", $ret->components);
+    #destroy_parsings($ret);
+    return { map { ($labels->[$_] => $values->[$_] ) } 0..$len-1 };
+  }
+);
+
 our @EXPORT = 
-  qw/ expand_address_root expand_address expansion_defaults ffi
-      hash_defaults near_dupes near_dupes_languages /;
+qw/ 
+  ffi
+  expansion_defaults expand_address_root expand_address
+  hash_defaults near_dupes near_dupes_languages
+  parser_defaults parse_address
+
+/;
 
 'my work here is done'
