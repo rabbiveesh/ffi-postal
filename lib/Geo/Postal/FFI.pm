@@ -228,7 +228,7 @@ parsing an address. Not intended to be used directly.
 
 $ffi->attach( [ libpostal_get_address_parser_default_options => 'parser_defaults' ], [], 'parser_options');
 
-$ffi->attach( [ libpostal_address_parser_response_destroy => 'destroy_parsings' ], [ 'parser_response*' ], );
+$ffi->attach( [ libpostal_address_parser_response_destroy => 'destroy_parsings' ], [ 'parser_response*' ], 'void');
 
 =method parse_address
 
@@ -250,10 +250,18 @@ $ffi->attach( [ libpostal_parse_address => 'parse_address' ],
     my $len = $ret->num_conmponents;
     my $labels = $ffi->cast( 'opaque', "string[$len]", $ret->labels);
     my $values = $ffi->cast( 'opaque', "string[$len]", $ret->components);
-    #destroy_parsings($ret);
+    destroy_parsings($ret);
     return { map { ($labels->[$_] => $values->[$_] ) } 0..$len-1 };
   }
 );
+
+END { 
+  my $ffi = ffi;
+  $ffi->function(libpostal_teardown_parser => [], 'void')->call()
+    if $parser_loaded;
+  $ffi->function(libpostal_teardown_language_classifier => [], 'void')->call();
+  $ffi->function(libpostal_teardown => [], 'void')->call();
+}
 
 our @EXPORT = 
 qw/ 
