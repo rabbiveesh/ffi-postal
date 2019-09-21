@@ -12,7 +12,7 @@ It provides no usable interface, because it's only meant to be read from.
 =cut
 
 record_layout( qw/
-  size_t  num_conmponents
+  size_t  num_components
   opaque  components
   opaque  labels
 /);

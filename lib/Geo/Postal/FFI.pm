@@ -226,9 +226,11 @@ parsing an address. Not intended to be used directly.
 
 =cut
 
-$ffi->attach( [ libpostal_get_address_parser_default_options => 'parser_defaults' ], [], 'parser_options');
+$ffi->attach( [ libpostal_get_address_parser_default_options =>
+    'parser_defaults' ], [], 'parser_options');
 
-$ffi->attach( [ libpostal_address_parser_response_destroy => 'destroy_parsings' ], [ 'parser_response*' ], 'void');
+$ffi->attach( [ libpostal_address_parser_response_destroy =>
+    'destroy_parsings' ], [ 'opaque' ], 'void');
 
 =method parse_address
 
@@ -238,7 +240,7 @@ $ffi->attach( [ libpostal_address_parser_response_destroy => 'destroy_parsings' 
 
 my $parser_loaded = 0;
 $ffi->attach( [ libpostal_parse_address => 'parse_address' ],
-  [ 'string', 'parser_options' ], 'parser_response*',
+  [ 'string', 'parser_options' ], 'opaque',
   sub {
     my ($inner, @args) = @_;
     $parser_loaded = 
@@ -246,11 +248,12 @@ $ffi->attach( [ libpostal_parse_address => 'parse_address' ],
       unless $parser_loaded;
     
     push @args, parser_defaults() if @args == 1;
-    my $ret = $inner->(@args);
-    my $len = $ret->num_conmponents;
+    my $raw = $inner->(@args);
+    my $ret = $ffi->cast( opaque => 'parser_response*', $raw);
+    my $len = $ret->num_components;
     my $labels = $ffi->cast( 'opaque', "string[$len]", $ret->labels);
     my $values = $ffi->cast( 'opaque', "string[$len]", $ret->components);
-    destroy_parsings($ret);
+    destroy_parsings($raw);
     return { map { ($labels->[$_] => $values->[$_] ) } 0..$len-1 };
   }
 );
