@@ -38,6 +38,7 @@ $ffi->type("record(Geo::Postal::Structs::Hashes)" => 'hash_options');
 $ffi->type("record(Geo::Postal::Structs::Expansions)" => 'expansion_options');
 $ffi->type("record(Geo::Postal::Structs::Parser)" => 'parser_options');
 $ffi->type("record(Geo::Postal::Structs::ParserResponse)" => 'parser_response');
+$ffi->type("record(Geo::Postal::Structs::Duplicates)" => 'duplicate_options');
 
 
 $ffi->function(libpostal_setup => [], 'bool')->call;
@@ -130,6 +131,61 @@ $ffi->attach(
   [ 'string', 'expansion_options', 'size_t*' ], 
   'opaque', \&process_expansions );
 
+=method ADDRESS PARSING FUNCTIONS
+
+=method parser_defaults
+
+Returns a C struct representing the default options for the
+parsing an address. Not intended to be used directly.
+
+=cut
+
+$ffi->attach( [ libpostal_get_address_parser_default_options =>
+    'parser_defaults' ], [], 'parser_options');
+
+$ffi->attach( [ libpostal_address_parser_response_destroy =>
+    'destroy_parsings' ], [ 'opaque' ], 'void');
+
+=method parse_address
+
+  my @labels_and_values = parse_address($address, $options?)
+
+Returns the labels and values one next to the other, basically
+perfect for being transformed into a hashref (as per
+Geo::libpostal). I decided to keep that because sometimes you have
+a malformed address, and then the parser will return multiple
+values for the same label, and you may want to check for that to
+mark the address off for manual inspection.
+
+=cut
+
+my $parser_loaded = 0;
+$ffi->attach( [ libpostal_parse_address => 'parse_address' ],
+  [ 'string', 'parser_options' ], 'opaque',
+  sub {
+    my ($inner, @args) = @_;
+    #lazy load the parser
+    $parser_loaded = 
+      $ffi->function( libpostal_setup_parser => [], 'bool')->call
+      unless $parser_loaded;
+    
+    #let options be optional
+    push @args, parser_defaults() if @args == 1;
+    #get the pointer
+    my $raw = $inner->(@args);
+    #copy it to perl space
+    my $ret = $ffi->cast( opaque => 'parser_response*', $raw);
+    #extract the goodies
+    my $len = $ret->num_components;
+    my $labels = $ffi->cast( 'opaque', "string[$len]", $ret->labels);
+    my $values = $ffi->cast( 'opaque', "string[$len]", $ret->components);
+    #free it in c space
+    destroy_parsings($raw);
+    return map { ($labels->[$_] => $values->[$_] ) } 0..$len-1;
+  }
+);
+
+
 =method NEAR DUPE HASHING FUNCTIONS
 
 =method hash_defaults
@@ -217,54 +273,55 @@ $ffi->attach(
   }
 );
 
-=method ADDRESS PARSING FUNCTIONS
 
-=method parser_defaults
+
+=method PAIRWISE DEDUPING FUNCTIONS
+
+=method duplicate_defaults
+
+  my $duplicates_options = duplicate_defaults
 
 Returns a C struct representing the default options for the
-parsing an address. Not intended to be used directly.
+pairwise comparison of addresses. Not intended to be used directly.
+=cut
+
+
+$ffi->attach( [ libpostal_get_default_duplicate_options => 
+    'duplicate_defaults' ], [], 'duplicate_options');
+
+=method is_duplicate
+
 
 =cut
 
-$ffi->attach( [ libpostal_get_address_parser_default_options =>
-    'parser_defaults' ], [], 'parser_options');
-
-$ffi->attach( [ libpostal_address_parser_response_destroy =>
-    'destroy_parsings' ], [ 'opaque' ], 'void');
-
-=method parse_address
-
-  my @labels_and_values = parse_address($address, $options?)
-
-=cut
-
-my $parser_loaded = 0;
-$ffi->attach( [ libpostal_parse_address => 'parse_address' ],
-  [ 'string', 'parser_options' ], 'opaque',
+$ffi->attach( [ libpostal_is_toponym_duplicate => 'is_toponym_duplicate' ],
+  [ size_t => 'string[]', 'string[]',
+    size_t => 'string[]', 'string[]',
+    'duplicate_options' ], 'senum',
   sub {
-    my ($inner, @args) = @_;
-    $parser_loaded = 
-      $ffi->function( libpostal_setup_parser => [], 'bool')->call
-      unless $parser_loaded;
-    
-    push @args, parser_defaults() if @args == 1;
-    my $raw = $inner->(@args);
-    my $ret = $ffi->cast( opaque => 'parser_response*', $raw);
-    my $len = $ret->num_components;
-    my $labels = $ffi->cast( 'opaque', "string[$len]", $ret->labels);
-    my $values = $ffi->cast( 'opaque', "string[$len]", $ret->components);
-    destroy_parsings($raw);
-    return { map { ($labels->[$_] => $values->[$_] ) } 0..$len-1 };
+    my ($inner, $labels1, $values1, $labels2, $values2, $opts) = @_;
+    $opts //= duplicate_defaults();
+    $inner->(0+ @$labels1, $labels1, $values1,
+             0+ @$labels2, $labels2, $values2,
+             $opts)
   }
 );
 
-END { 
-  my $ffi = ffi;
-  $ffi->function(libpostal_teardown_parser => [], 'void')->call()
-    if $parser_loaded;
-  $ffi->function(libpostal_teardown_language_classifier => [], 'void')->call();
-  $ffi->function(libpostal_teardown => [], 'void')->call();
+my @duplicate_parts =
+   qw/ name street house_number po_box unit floor postal_code /;
+
+sub dupe_defaults {
+  my ($inner, @args) = @_;
+  push @args, duplicate_defaults() if @args == 2;
+  $inner->(@args)
 }
+
+for (@duplicate_parts) {
+  $ffi->attach( [ "libpostal_is_${_}_duplicate" => "is_${_}_duplicate" ],
+    [ string => 'string', 'duplicate_options' ], 'senum', 
+    \&dupe_defaults );
+}
+
 
 our @EXPORT = 
 qw/ 
@@ -272,7 +329,18 @@ qw/
   expansion_defaults expand_address_root expand_address
   hash_defaults near_dupes near_dupes_languages
   parser_defaults parse_address
+  duplicate_defaults
+  /;
 
-/;
+push @EXPORT, "is_${_}_duplicate" for @duplicate_parts;
+
+END { 
+  my $ffi = ffi;
+  $ffi->function(libpostal_teardown_parser => [], 'void')->call()
+    if $parser_loaded;
+  $ffi->function(libpostal_teardown_language_classifier => [], 'void')
+    ->call();
+  $ffi->function(libpostal_teardown => [], 'void')->call();
+}
 
 'my work here is done'

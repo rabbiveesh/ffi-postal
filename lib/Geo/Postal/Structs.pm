@@ -11,6 +11,7 @@ sub import {
   Geo::Postal::Structs::Expansions->import::into($target);
   Geo::Postal::Structs::Parser->import::into($target);
   Geo::Postal::Structs::ParserResponse->import::into($target);
+  Geo::Postal::Structs::Duplicates->import::into($target);
 }
 
 sub unimport {
@@ -19,6 +20,7 @@ sub unimport {
   Geo::Postal::Structs::Expansions->unimport::out_of($target);
   Geo::Postal::Structs::Parser->unimport::out_of($target);
   Geo::Postal::Structs::ParserResponse->unimport::out_of($target);
+  Geo::Postal::Structs::Duplicates->unimport::out_of($target);
 }
 
 'ship em out'
