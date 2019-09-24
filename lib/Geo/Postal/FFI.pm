@@ -308,7 +308,7 @@ $ffi->attach( [ libpostal_is_toponym_duplicate => 'is_toponym_duplicate' ],
 );
 
 my @duplicate_parts =
-   qw/ name street house_number po_box unit floor postal_code /;
+   qw/ name street house_number po_box unit floor/;
 
 sub dupe_defaults {
   my ($inner, @args) = @_;
@@ -322,6 +322,9 @@ for (@duplicate_parts) {
     \&dupe_defaults );
 }
 
+$ffi->attach( [ libpostal_is_postal_code_duplicate => 
+    'is_postcode_duplicate' ], [ string => 'string', 'duplicate_options' ],
+  'senum', \&dupe_defaults );
 
 our @EXPORT = 
 qw/ 
@@ -329,7 +332,7 @@ qw/
   expansion_defaults expand_address_root expand_address
   hash_defaults near_dupes near_dupes_languages
   parser_defaults parse_address
-  duplicate_defaults
+  duplicate_defaults is_toponym_duplicate is_postcode_duplicate
   /;
 
 push @EXPORT, "is_${_}_duplicate" for @duplicate_parts;

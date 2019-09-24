@@ -101,5 +101,20 @@ subtest 'near dupe hashes' => sub {
 
 };
 
+subtest 'pairwise deduping' => sub {
+ 
+  is is_street_duplicate('drury ln', 'drury lane'), 9, 
+    'gets common abbreviation for street';
+  is is_street_duplicate('drury', 'drury lane'), 3,
+    'marks likely dupes';
+
+  is is_postcode_duplicate('drury ln', 'drury lane'), 0,
+    'streets are not postcodes';
+  is is_postcode_duplicate( 'five five eight four three', 55843 ), 9,
+    'alpha and numeric zip codes match';
+
+  #TODO- test name house_number po_box unit floor and toponym
+
+};
 
 done_testing;
