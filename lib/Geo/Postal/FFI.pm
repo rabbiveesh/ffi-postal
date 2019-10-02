@@ -160,14 +160,18 @@ mark the address off for manual inspection.
 =cut
 
 my $parser_loaded = 0;
+$ffi->attach( [ libpostal_setup_parser => 'load_parser' ],
+  [], 'bool', sub {
+  my ($inner) = @_;
+  $parser_loaded = $inner->() unless $parser_loaded;
+});
+
 $ffi->attach( [ libpostal_parse_address => 'parse_address' ],
   [ 'string', 'parser_options' ], 'opaque',
   sub {
     my ($inner, @args) = @_;
     #lazy load the parser
-    $parser_loaded = 
-      $ffi->function( libpostal_setup_parser => [], 'bool')->call
-      unless $parser_loaded;
+    load_parser();
     
     #let options be optional
     push @args, parser_defaults() if @args == 1;
@@ -331,7 +335,7 @@ qw/
   ffi
   expansion_defaults expand_address_root expand_address
   hash_defaults near_dupes near_dupes_languages
-  parser_defaults parse_address
+  parser_defaults parse_address load_parser
   duplicate_defaults is_toponym_duplicate is_postcode_duplicate
   /;
 
