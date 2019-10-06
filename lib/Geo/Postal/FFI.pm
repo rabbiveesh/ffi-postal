@@ -72,20 +72,27 @@ finally the array itself. Not intended to be used directly.
 
 $ffi->attach(
   [ libpostal_expansion_array_destroy => 'destroy_expansions' ],
-  [ opaque => 'size_t' ]);
+  [ opaque => 'size_t' ], 'void');
   
+
 sub process_char_pp {
   my ($inner, @args) = @_;
+  #call the function
   my $ret_ptr = 
     $inner->(@args, \my $ret_len);
+  #nothing to do if there are no results
   return () unless $ret_len;
+  #cast the char** into an arrayref
   my $ret = $ffi->cast( opaque => "string[$ret_len]", $ret_ptr);
+  #clean up the C side of things
   destroy_expansions($ret_ptr, $ret_len);
+  #send back the string[]
   return @$ret;
 }
 
 sub process_expansions {
-  #third arg is the options
+  #third arg is the options, if not passed, then supply the
+  #defaults
   $_[2] //= expansion_defaults();
   process_char_pp(@_);
 }
