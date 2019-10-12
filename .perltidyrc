@@ -1,0 +1,13 @@
+-indent-columns=2
+-continuation-indentation=1
+
+#parentheses
+-line-up-parentheses
+-indent-closing-paren
+-paren-vertical-tightness=1
+-closing-token-indentation=1
+-vertical-tightness-closing=1
+
+-stack-opening-tokens
+
+-cuddled-else
