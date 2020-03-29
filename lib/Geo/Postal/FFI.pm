@@ -5,7 +5,7 @@ use v5.22;
 use Exporter::Shiny;
 # ABSTRACT: FFI bindings for libpostal, an address parsing and deduping library
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 =head1 SYNOPSIS
 
@@ -24,9 +24,7 @@ use Geo::Postal::Structs;
 sub ffi {
   #NOTE- do we really need an ffi singleton? It helps for sharing
   #types, i guess
-  state $ffi = FFI::Platypus->new( api => 1 ,
-    #TODO- take this out for CPAN 
-    experimental => 1);
+  state $ffi = FFI::Platypus->new( api => 1 );
 }
 
 my $ffi = ffi;
@@ -173,7 +171,7 @@ $ffi->attach( [ libpostal_setup_parser => 'load_parser' ],
   $parser_loaded = $inner->() unless $parser_loaded;
 });
 
-$ffi->attach( [ libpostal_parse_address => 'parse_address' ],
+$ffi->attach( [ libpostal_parse_address => 'local_parse_address' ],
   [ 'string', 'parser_options' ], 'opaque',
   sub {
     my ($inner, @args) = @_;
@@ -347,6 +345,21 @@ qw/
   /;
 
 push @EXPORT, "is_${_}_duplicate" for @duplicate_parts;
+
+sub _generate_parse_address {
+  use Mojo::UserAgent;
+  my $ua = Mojo::UserAgent->new;
+  unless (my $addr = $ENV{GEO_POSTAL_FFI_SERVER}) {
+    return \&local_parse_address
+  }
+  else {
+    return sub {
+      my $json = $ua->post("$addr/parse", json => { string => $_[0] })
+        ->res->json;
+      return @$json;
+    }
+  }
+}
 
 END { 
   my $ffi = ffi;

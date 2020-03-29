@@ -7,10 +7,13 @@ use Geo::Postal::FFI;
 
 use Geo::Postal::Structs;
 
-is leaked_count { 
+#is leaked_count { 
+no_leaks_ok {
   expand_address
     'franklin university 99 your face ln cleveland ohio 44118 apt 12'
-}, 3, 'expand_address does not leak';
+}
+#, 3,
+'expand_address does not leak';
 
 no_leaks_ok {
   Geo::Postal::Structs::Hashes->new
