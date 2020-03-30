@@ -1,3 +1,5 @@
 .*.sw?
 
 FFI-Postal*
+.build
+geo-postal-ffi.pid
