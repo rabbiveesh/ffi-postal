@@ -345,6 +345,7 @@ qw/
   /;
 
 push @EXPORT, "is_${_}_duplicate" for @duplicate_parts;
+our @EXPORT_OK = ( 'local_parse_address' );
 
 sub _generate_parse_address {
   use Mojo::UserAgent;
