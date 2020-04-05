@@ -1,8 +1,8 @@
 use Test2::V0;
-use Geo::Postal::FFI;
+use Geo::Postal::FFI qw/local_parse_address/;
 
 subtest 'address parsing' => sub {
-  is { parse_address('franklin university 99 your face ln cleveland ohio 44118 apt 12') },
+  is { local_parse_address('franklin university 99 your face ln cleveland ohio 44118 apt 12') },
   { house => 'franklin university',
     house_number => 99,
     unit => 'apt 12',
@@ -12,7 +12,7 @@ subtest 'address parsing' => sub {
     postcode => 44118,
   }, 'parses correctly'; 
 
-  is { parse_address('franklin university 99 your face ln cleveland ohio 44118 usa apt 12') }, 
+  is { local_parse_address('franklin university 99 your face ln cleveland ohio 44118 usa apt 12') }, 
   { house => 'franklin university',
     house_number => 99,
     unit => 'apt 12',
@@ -22,7 +22,7 @@ subtest 'address parsing' => sub {
     postcode => 44118,
   }, 'parses correctly'; 
 
-  is { parse_address('99 your face ln cleveland ohio 44118 usa') },
+  is { local_parse_address('99 your face ln cleveland ohio 44118 usa') },
   { road => 'your face ln',
     city => 'cleveland',
     state => 'ohio',
@@ -31,13 +31,13 @@ subtest 'address parsing' => sub {
     country => 'usa'
   }, 'parses again correctly';
 
-  is { parse_address('99 your face ln cleveland') },
+  is { local_parse_address('99 your face ln cleveland') },
   { road => 'your face ln',
     house_number => 99,
     city => 'cleveland'
   }, 'and again';
 
-  is [ parse_address('franklin university 99 your face ln cleveland ohio 44118 usa apt 12') ],
+  is [ local_parse_address('franklin university 99 your face ln cleveland ohio 44118 usa apt 12') ],
   [
     house => 'franklin university',
     house_number => 99,
@@ -51,6 +51,21 @@ subtest 'address parsing' => sub {
   
 };
 
+subtest 'parsing addresses with utf8' => sub {
+
+  like { local_parse_address 'TÍPICO DOMINICANO 1390 SAINT NICHOLAS AVE' },
+    { house => 'típico dominicano' },
+    'did a utf8 right';
+
+  like { local_parse_address '15321 Ârborio ln' },
+    { road => 'ârborio ln' },
+    'survived without dying on utf8 input';
+
+  like { local_parse_address '14443 MARIÁ AVE' }, 
+    { road => 'mariá ave' },
+    'even when it used to die horribly';
+
+};
 
 
 done_testing;

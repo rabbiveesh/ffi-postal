@@ -162,6 +162,19 @@ a malformed address, and then the parser will return multiple
 values for the same label, and you may want to check for that to
 mark the address off for manual inspection.
 
+Encoding on input and output is taken care of for you. Please file a bug
+immediately if you don't find that to work for you.
+
+This function is the big memory hog of the library. As such, a Mojo app is
+bundled together with this release that can be used to offload all the memory
+to one process.  On the usage side, this is activated by setting the
+GEO_POSTAL_FFI_SERVER env variable with a url that represents where your app is
+running. The variable is checked at import time, and it will silently replace this function
+with an equivalent one that calls the backend.
+
+If for some reason you need to parse in this process specifically, then you can
+request the local_parse_address function as a named import.
+
 =cut
 
 my $parser_loaded = 0;
@@ -171,6 +184,7 @@ $ffi->attach( [ libpostal_setup_parser => 'load_parser' ],
   $parser_loaded = $inner->() unless $parser_loaded;
 });
 
+use Encode::Simple;
 $ffi->attach( [ libpostal_parse_address => 'local_parse_address' ],
   [ 'string', 'parser_options' ], 'opaque',
   sub {
@@ -181,6 +195,7 @@ $ffi->attach( [ libpostal_parse_address => 'local_parse_address' ],
     #let options be optional
     push @args, parser_defaults() if @args == 1;
     #get the pointer
+    $args[0] = encode_utf8 $args[0];
     my $raw = $inner->(@args);
     #copy it to perl space
     my $ret = $ffi->cast( opaque => 'parser_response*', $raw);
@@ -190,7 +205,7 @@ $ffi->attach( [ libpostal_parse_address => 'local_parse_address' ],
     my $values = $ffi->cast( 'opaque', "string[$len]", $ret->components);
     #free it in c space
     destroy_parsings($raw);
-    return map { ($labels->[$_] => $values->[$_] ) } 0..$len-1;
+    return map { decode_utf8 $_ } map { ($labels->[$_] => $values->[$_] ) } 0..$len-1;
   }
 );
 
