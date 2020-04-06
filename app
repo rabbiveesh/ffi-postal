@@ -5,7 +5,9 @@ use Mojolicious::Lite;
 use lib 'lib';
 use Geo::Postal::FFI qw/load_parser local_parse_address/;
 
-load_parser;
+app->hook(before_server_start => sub {
+  load_parser;
+});
 
 app->config(
   hypnotoad => {
