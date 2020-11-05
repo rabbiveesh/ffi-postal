@@ -1,0 +1,138 @@
+NAME
+    Geo::Postal::FFI - FFI bindings for libpostal, an address parsing and
+    deduping library
+
+VERSION
+    version 0.003
+
+SYNOPSIS
+    libpostal is a C library with bindings available in many languages.
+    There's even a perl version, but it isn't up to date with the new
+    features which have been added since 2018. This is an attempt to achieve
+    parity with the official bindings, and even provide a more intuitive,
+    perl-y interface to the library.
+
+METHODS
+  EXPANSION FUNCTIONS
+  expansion_defaults
+        my $options = expansion_defaults;
+
+    Returns a raw C struct suitable to be passed to the expansion functions.
+    Not intended to be used directly.
+
+  destroy_expansions
+        destroy_expansions( char** $array_ptr, $array_len )
+
+    Walks through a C array of strings, freeing all members and then finally
+    the array itself. Not intended to be used directly.
+
+  expand_address
+        my @expansion = expand_address( $address, $options? )
+
+    Returns a list of possible expansions for the $address. This may give
+    you some ridiculous results, like dr expanding out to doctor in a place
+    you'd expect it to say drive, but hey, it's fast and works.
+
+    The intended usage is to compare lists of expansions to one another, and
+    if there's any collision, then the two are duplicates.
+
+    This is in the middle of being superceded by "near_dupes". See there for
+    more options.
+
+  expand_address_root
+        my @expansion_roots = expand_address_roots( $address, $options? )
+
+    Similar to expand_address, but instead of expanding suspects, it will
+    just drop out items that could be ommited. That means instead of
+    expanding dr to both doctor and drive, it just drops it out from the
+    expansion. This is much more compact (b/c expand_address can sometimes
+    return over 500 expansions, because it returns every relevant
+    combination. I haven't gotten over 9000 expansions yet, but it could
+    still happen).
+
+  ADDRESS PARSING FUNCTIONS
+  parser_defaults
+    Returns a C struct representing the default options for the parsing an
+    address. Not intended to be used directly.
+
+  parse_address
+      my @labels_and_values = parse_address($address, $options?)
+
+    Returns the labels and values one next to the other, basically perfect
+    for being transformed into a hashref (as per Geo::libpostal). I decided
+    to keep that because sometimes you have a malformed address, and then
+    the parser will return multiple values for the same label, and you may
+    want to check for that to mark the address off for manual inspection.
+
+    Encoding on input and output is taken care of for you. Please file a bug
+    immediately if you don't find that to work for you.
+
+    This function is the big memory hog of the library. As such, a Mojo app
+    is bundled together with this release that can be used to offload all
+    the memory to one process. On the usage side, this is activated by
+    setting the GEO_POSTAL_FFI_SERVER env variable with a url that
+    represents where your app is running. The variable is checked at import
+    time, and it will silently replace this function with an equivalent one
+    that calls the backend.
+
+    If for some reason you need to parse in this process specifically, then
+    you can request the local_parse_address function as a named import.
+
+  NEAR DUPE HASHING FUNCTIONS
+  hash_defaults
+        my $hashes_options = hash_defaults
+
+    Returns a C struct representing the default options for the generation
+    of near dupe hashes. Not intended to be used directly.
+
+  near_dupes
+        my @near_dupe_hashes = near_dupes \@labels, \@values, $options?
+
+    Returns hashes suitable for grouping suspiciously similar addresses. The
+    format for the address is two arrayrefs, one of labels and the other of
+    corresponding values, as returned by parse_address (or at least with the
+    same labels).
+
+    If you pass undef or nothing as the third argument, the default options
+    will be used. This defaults to returning name_and_address_keys, which
+    means for a lot of addresses (unless they have a 'house' label) you'll
+    get back nothing. See the options docs for more information.
+
+    Low level documentation for the options is available in
+    Geo::Postal::Structs::Hashes.
+
+    Language detection will be performed on the address in question, and
+    then expansions will include terms from all relevant dictionaries.
+
+  near_dupes_languages
+        my @hashes = near_dupes_languages \@labels, \@values, $options?, \@langs
+
+    Returns hashes suitable for grouping suspiciously similar addresses. The
+    format for the address is two arrayrefs, one of labels and the other of
+    corresponding values, as returned by parse_address (or at least with the
+    same labels).
+
+    If you omit the third argument, then the default options will be used.
+
+    Low level documentation for the options is available in
+    Geo::Postal::Structs::Hashes.
+
+    The hashes will only use terms from the languages provided in \@langs.
+
+  PAIRWISE DEDUPING FUNCTIONS
+  duplicate_defaults
+      my $duplicates_options = duplicate_defaults
+
+    Returns a C struct representing the default options for the pairwise
+    comparison of addresses. Not intended to be used directly.
+
+  is_duplicate
+AUTHOR
+    Avishai Goldman <veesh@cpan.org>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2019 by Avishai Goldman.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
+
