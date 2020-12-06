@@ -6,7 +6,7 @@ use Exporter::Shiny;
 use Try::Tiny;
 # ABSTRACT: FFI bindings for libpostal, an address parsing and deduping library
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 =head1 SYNOPSIS
 
