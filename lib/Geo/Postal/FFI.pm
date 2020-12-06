@@ -3,6 +3,7 @@ use warnings;
 package Geo::Postal::FFI;
 use v5.22;
 use Exporter::Shiny;
+use Try::Tiny;
 # ABSTRACT: FFI bindings for libpostal, an address parsing and deduping library
 
 our $VERSION = '0.003';
@@ -219,7 +220,9 @@ sub _generate_parse_address {
     return sub {
       my $json = $ua->post("$addr/parse", json => { string => $_[0] })
         ->res->json;
-      return @$json;
+      my @ret = try { @$json }
+      catch { warn "Could not parse $_[0], $_" }
+      return @ret
     }
   }
 }
@@ -398,7 +401,7 @@ Avishai Goldman <veesh@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2019 by Avishai Goldman.
+This software is copyright (c) 2019-2020 by Avishai Goldman.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

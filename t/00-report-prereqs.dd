@@ -18,7 +18,8 @@ do { my $x = {
                                       'Encode::Simple' => '0',
                                       'Exporter::Tiny' => '0',
                                       'FFI::Platypus' => '0',
-                                      'FFI::Platypus::Record::StringArray' => '0'
+                                      'FFI::Platypus::Record::StringArray' => '0',
+                                      'Try::Tiny' => '0'
                                     }
                     },
        'test' => {

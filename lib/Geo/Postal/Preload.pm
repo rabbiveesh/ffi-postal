@@ -29,7 +29,7 @@ Avishai Goldman <veesh@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2019 by Avishai Goldman.
+This software is copyright (c) 2019-2020 by Avishai Goldman.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
