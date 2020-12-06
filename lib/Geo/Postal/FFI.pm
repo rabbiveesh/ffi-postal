@@ -221,7 +221,7 @@ sub _generate_parse_address {
       my $json = $ua->post("$addr/parse", json => { string => $_[0] })
         ->res->json;
       my @ret = try { @$json }
-      catch { warn "Could not parse $_[0], $_" }
+      catch { warn "Could not parse $_[0], $_" };
       return @ret
     }
   }
