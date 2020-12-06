@@ -2,7 +2,7 @@ package Geo::Postal::Structs::ParserResponse;
 use FFI::Platypus::Record;
 # ABSTRACT: Struct for the return of parse_address
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 
 record_layout( qw/
@@ -26,7 +26,7 @@ Geo::Postal::Structs::ParserResponse - Struct for the return of parse_address
 
 =head1 VERSION
 
-version 0.003
+version 0.004
 
 This is a low level implementation of the return value from parse_adress. 
 It provides no usable interface, because it's only meant to be read from.

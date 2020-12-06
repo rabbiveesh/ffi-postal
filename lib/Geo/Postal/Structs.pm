@@ -1,7 +1,7 @@
 package Geo::Postal::Structs;
 # ABSTRACT: Exports the C level options structs
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 use Import::Into;
 
@@ -37,7 +37,7 @@ Geo::Postal::Structs - Exports the C level options structs
 
 =head1 VERSION
 
-version 0.003
+version 0.004
 
 =head1 AUTHOR
 

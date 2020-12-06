@@ -6,7 +6,7 @@ use Exporter::Shiny;
 use Try::Tiny;
 # ABSTRACT: FFI bindings for libpostal, an address parsing and deduping library
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 
 use FFI::Platypus;
@@ -250,7 +250,7 @@ Geo::Postal::FFI - FFI bindings for libpostal, an address parsing and deduping l
 
 =head1 VERSION
 
-version 0.003
+version 0.004
 
 =head1 SYNOPSIS
 

@@ -62,11 +62,11 @@
    "provides" : {
       "Geo::Postal::FFI" : {
          "file" : "lib/Geo/Postal/FFI.pm",
-         "version" : "0.003"
+         "version" : "0.004"
       },
       "Geo::Postal::Preload" : {
          "file" : "lib/Geo/Postal/Preload.pm",
-         "version" : "0.003"
+         "version" : "0.004"
       },
       "Geo::Postal::Structs" : {
          "file" : "lib/Geo/Postal/Structs.pm",
@@ -74,7 +74,7 @@
       },
       "Geo::Postal::Structs::Duplicates" : {
          "file" : "lib/Geo/Postal/Structs/Duplicates.pm",
-         "version" : "0.003"
+         "version" : "0.004"
       },
       "Geo::Postal::Structs::Expansions" : {
          "file" : "lib/Geo/Postal/Structs/Expansions.pm",
@@ -94,7 +94,7 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.003",
+   "version" : "0.004",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.026001"
@@ -264,7 +264,7 @@
                   "branch" : null,
                   "changelog" : "Changes",
                   "signed" : 0,
-                  "tag" : "0.003",
+                  "tag" : "0.004",
                   "tag_format" : "%v",
                   "tag_message" : "%v"
                },
