@@ -4,3 +4,5 @@ FFI-Postal*
 .build
 geo-postal-ffi.pid
 geo-postal-ffi.service
+
+.perl-version
