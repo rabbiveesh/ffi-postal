@@ -20,12 +20,14 @@ my %WriteMakefileArgs = (
     "Exporter::Tiny" => 0,
     "FFI::Platypus" => 0,
     "FFI::Platypus::Record::StringArray" => 0,
+    "Import::Into" => 0,
     "Try::Tiny" => 0
   },
   "TEST_REQUIRES" => {
     "ExtUtils::MakeMaker" => 0,
     "File::Spec" => 0,
-    "Test2::Suite" => 0,
+    "Test2::V0" => 0,
+    "Test::LeakTrace" => 0,
     "Test::More" => 0
   },
   "VERSION" => "0.004",
@@ -42,7 +44,9 @@ my %FallbackPrereqs = (
   "FFI::Platypus" => 0,
   "FFI::Platypus::Record::StringArray" => 0,
   "File::Spec" => 0,
-  "Test2::Suite" => 0,
+  "Import::Into" => 0,
+  "Test2::V0" => 0,
+  "Test::LeakTrace" => 0,
   "Test::More" => 0,
   "Try::Tiny" => 0
 );
