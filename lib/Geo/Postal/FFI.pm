@@ -186,7 +186,7 @@ $ffi->attach( [ libpostal_setup_parser => 'load_parser' ],
 });
 
 use Encode::Simple;
-$ffi->attach( [ libpostal_parse_address => 'local_parse_address' ],
+$ffi->attach( [ libpostal_parse_address => 'parse_address' ],
   [ 'string', 'parser_options' ], 'opaque',
   sub {
     my ($inner, @args) = @_;
@@ -361,27 +361,6 @@ qw/
   /;
 
 push @EXPORT, "is_${_}_duplicate" for @duplicate_parts;
-our @EXPORT_OK = ( 'local_parse_address' );
-
-sub _generate_parse_address {
-  use Mojo::UserAgent;
-  my $ua = Mojo::UserAgent->new;
-  unless (my $addr = $ENV{GEO_POSTAL_FFI_SERVER}) {
-    return \&local_parse_address
-  }
-  else {
-    return sub {
-      my $json = $ua->post("$addr/parse", json => { string => $_[0] })
-        ->res->json;
-      my @ret = try { @$json }
-      catch { 
-        warn "Could not parse $_[0], $_";
-        return ()
-      };
-      return @ret
-    }
-  }
-}
 
 END { 
   my $ffi = ffi;

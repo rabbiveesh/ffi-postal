@@ -6,3 +6,4 @@ geo-postal-ffi.pid
 geo-postal-ffi.service
 
 .perl-version
+.yath-persist.json
