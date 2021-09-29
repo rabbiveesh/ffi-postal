@@ -3,6 +3,7 @@ use warnings;
 package Geo::Postal::FFI;
 use v5.22;
 use Exporter::Shiny;
+use Encode::Simple;
 use Try::Tiny;
 # ABSTRACT: FFI bindings for libpostal, an address parsing and deduping library
 
@@ -86,14 +87,13 @@ sub process_char_pp {
   #clean up the C side of things
   destroy_expansions($ret_ptr, $ret_len);
   #send back the string[]
-  return @$ret;
+  return map { decode_utf8 $_ } @$ret;
 }
 
 sub process_expansions {
-  #third arg is the options, if not passed, then supply the
-  #defaults
-  $_[2] //= expansion_defaults();
-  process_char_pp(@_);
+  my ($inner, $text, $options) = @_;
+  $options //= expansion_defaults();
+  process_char_pp($inner, $text, $options);
 }
 
 =method expand_address
@@ -185,9 +185,8 @@ $ffi->attach( [ libpostal_setup_parser => 'load_parser' ],
   $parser_loaded = $inner->() unless $parser_loaded;
 });
 
-use Encode::Simple;
 $ffi->attach( [ libpostal_parse_address => 'parse_address' ],
-  [ 'string', 'parser_options' ], 'opaque',
+  [ 'string', 'parser_options' ] => 'opaque',
   sub {
     my ($inner, @args) = @_;
     #lazy load the parser
@@ -195,8 +194,9 @@ $ffi->attach( [ libpostal_parse_address => 'parse_address' ],
     
     #let options be optional
     push @args, parser_defaults() if @args == 1;
-    #get the pointer
     $args[0] = encode_utf8 $args[0];
+    
+    #get the pointer
     my $raw = $inner->(@args);
     #copy it to perl space
     my $ret = $ffi->cast( opaque => 'parser_response*', $raw);
@@ -250,8 +250,7 @@ dictionaries.
 =cut
 
 $ffi->attach( [ libpostal_near_dupe_hashes => 'near_dupes' ],
-  [ 'size_t', 'string[]', 'string[]', 'hash_options', 'size_t*' ],
-  'opaque', 
+  [ 'size_t', 'string[]', 'string[]', 'hash_options', 'size_t*' ] => 'opaque', 
   sub {
     my $inner = shift;
     unshift @_, scalar @{$_[0]};

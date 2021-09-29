@@ -54,15 +54,12 @@ subtest 'address parsing' => sub {
 subtest 'parsing addresses with utf8' => sub {
 
   like { parse_address 'TÍPICO DOMINICANO 1390 SAINT NICHOLAS AVE' },
-    { house => 'típico dominicano' },
-    'did a utf8 right';
+    { house => 'típico dominicano' }, 'did a utf8 right';
 
-  like { parse_address '15321 Ârborio ln' },
-    { road => 'ârborio ln' },
+  like { parse_address '15321 Ârborio ln' }, { road => 'ârborio ln' },
     'survived without dying on utf8 input';
 
-  like { parse_address '14443 MARIÁ AVE' }, 
-    { road => 'mariá ave' },
+  like { parse_address '14443 MARIÁ AVE' }, { road => 'mariá ave' },
     'even when it used to die horribly';
 
 };

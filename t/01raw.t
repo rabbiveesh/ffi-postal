@@ -1,4 +1,5 @@
-use Test2::V0;
+use Test2::V0; # NOTE - this enables utf8
+use Encode::Simple;
 
 use Geo::Postal::FFI;
 
@@ -41,6 +42,13 @@ subtest 'expansions' => sub {
        ],
        'roots returns as expected when accounting for lang w/o expansion';
   };
+
+  subtest 'with utf8' => sub {
+    my $text = 'רחוב שומשום';
+    is [ expand_address $text ], [ $text, 'rhwb swmswm', 'rhwv שwmשwm' ],
+      'got the expected expansions, as text';
+  };
+
   #TODO- add testing for when we do pass in options. Or maybe
   #we'll do that later when we have a saner interface for it?
 };
