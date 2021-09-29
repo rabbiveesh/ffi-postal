@@ -3,7 +3,7 @@
 use Mojolicious::Lite;
 
 use lib 'lib';
-use Geo::Postal::FFI qw/load_parser local_parse_address/;
+use Geo::Postal::FFI;
 
 app->hook(before_server_start => sub {
   load_parser;
@@ -16,10 +16,23 @@ app->config(
   }
 );
 
-post '/parse' => sub {
+post '/parseAddress' => sub {
   my $c = shift;
-  my $string = $c->req->json->{string};
-  $c->render(json => [ local_parse_address($string) ] );
+  my $text = $c->req->json('/text');
+  $c->render(json => { parsedPairs => [ parse_address($text) ] } );
 };
+
+post '/expandAddress' => sub {
+  my $c = shift;
+  my $text = $c->req->json('/text');
+  $c->render(json => { expansions => [ expand_address($text) ] } );
+};
+
+post '/expandAddressRoot' => sub {
+  my $c = shift;
+  my $text = $c->req->json('/text');
+  $c->render(json => { expansions => [ expand_address_root($text) ] } );
+};
+  
 
 app->start;
