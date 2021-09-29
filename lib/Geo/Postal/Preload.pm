@@ -1,10 +1,12 @@
 package Geo::Postal::Preload;
-use base Test2::Harness::Preload;
+use strict;
+use Test2::Harness::Runner::Preload;
 
 use Geo::Postal::FFI;
 
-sub preload {
+stage Postal => sub {
+  default();
   load_parser
-}
+};
 
 1
