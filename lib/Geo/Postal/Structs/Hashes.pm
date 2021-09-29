@@ -2,7 +2,7 @@ package Geo::Postal::Structs::Hashes;
 use FFI::Platypus::Record;
 # ABSTRACT: Structs for near_dupes options
 
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 
 
 
@@ -37,7 +37,7 @@ Geo::Postal::Structs::Hashes - Structs for near_dupes options
 
 =head1 VERSION
 
-version 0.004
+version 0.005
 
 =head1 METHODS
 

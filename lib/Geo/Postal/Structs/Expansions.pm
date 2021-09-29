@@ -4,7 +4,7 @@ use FFI::Platypus::Record::StringArray;
 use Carp;
 # ABSTRACT: Struct for expand_address options
 
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 
 
 
@@ -70,7 +70,7 @@ Geo::Postal::Structs::Expansions - Struct for expand_address options
 
 =head1 VERSION
 
-version 0.004
+version 0.005
 
 =head1 METHODS
 

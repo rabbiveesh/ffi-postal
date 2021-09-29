@@ -2,7 +2,7 @@ package Geo::Postal::Structs::Parser;
 use FFI::Platypus::Record;
 # ABSTRACT: Struct for the return of parse_address
 
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 
 
 
@@ -25,7 +25,7 @@ Geo::Postal::Structs::Parser - Struct for the return of parse_address
 
 =head1 VERSION
 
-version 0.004
+version 0.005
 
 =head1 METHODS
 

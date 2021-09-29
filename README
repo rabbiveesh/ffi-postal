@@ -3,7 +3,7 @@ NAME
     deduping library
 
 VERSION
-    version 0.004
+    version 0.005
 
 SYNOPSIS
     libpostal is a C library with bindings available in many languages.

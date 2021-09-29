@@ -28,16 +28,16 @@ no_index:
 provides:
   Geo::Postal::FFI:
     file: lib/Geo/Postal/FFI.pm
-    version: '0.004'
+    version: '0.005'
   Geo::Postal::Preload:
     file: lib/Geo/Postal/Preload.pm
-    version: '0.004'
+    version: '0.005'
   Geo::Postal::Structs:
     file: lib/Geo/Postal/Structs.pm
     version: '0.001'
   Geo::Postal::Structs::Duplicates:
     file: lib/Geo/Postal/Structs/Duplicates.pm
-    version: '0.004'
+    version: '0.005'
   Geo::Postal::Structs::Expansions:
     file: lib/Geo/Postal/Structs/Expansions.pm
     version: '0.001'
@@ -57,7 +57,7 @@ requires:
   FFI::Platypus::Record::StringArray: '0'
   Import::Into: '0'
   Try::Tiny: '0'
-version: '0.004'
+version: '0.005'
 x_Dist_Zilla:
   perl:
     version: '5.026001'
@@ -188,7 +188,7 @@ x_Dist_Zilla:
           branch: ~
           changelog: Changes
           signed: 0
-          tag: '0.004'
+          tag: '0.005'
           tag_format: '%v'
           tag_message: '%v'
         Dist::Zilla::Role::Git::Repo:
