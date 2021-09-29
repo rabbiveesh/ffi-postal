@@ -12,7 +12,7 @@ app->hook(before_server_start => sub {
 app->config(
   hypnotoad => {
     pid_file => app->home->child('geo-postal-ffi.pid'),
-    listen => [ 'http://localhost:9009' ]
+    listen => [ 'http://*:9009' ]
   }
 );
 

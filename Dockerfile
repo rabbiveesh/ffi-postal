@@ -1,4 +1,4 @@
-FROM sleekybadger/libpostal:1.1-alpine as libpostal-build
+FROM pelias/libpostal_baseimage as libpostal-build
 
 FROM perl:5.34.0 as dzil
 
@@ -13,15 +13,15 @@ RUN dzil listdeps | cpm install -
 
 FROM perl:5.34.0
 
-COPY --from=libpostal-build /data /data
-COPY --from=libpostal-build /usr/lib/libpostal.so /usr/lib/libpostal.so
-COPY --from=libpostal-build /usr/lib/libpostal.so.1 /usr/lib/libpostal.so.1
-COPY --from=libpostal-build /usr/lib/libpostal.so /usr/lib/libpostal.so
-COPY --from=libpostal-build /lib/libc.musl-x86_64.so.1 /usr/lib/libc.musl-x86_64.so.1
+COPY --from=libpostal-build /usr/share/libpostal /usr/share/libpostal
+COPY --from=libpostal-build /usr/local/lib/libpostal.so.1 /usr/lib/libpostal.so.1
+COPY --from=libpostal-build /usr/local/lib/libpostal.so /usr/lib/libpostal.so
+
+RUN cpanm -n Mojolicious
 
 WORKDIR /app
 COPY --from=dzil /app/local ./local
 COPY . .
+ENV PERL5LIB=/app/local/lib/perl5
 
-RUN prove -Ilocal/lib/perl5 -lvj2 t/
-
+CMD [ "hypnotoad", "app", "-f" ]
