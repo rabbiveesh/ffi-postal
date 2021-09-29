@@ -16,22 +16,31 @@ app->config(
   }
 );
 
-post '/parseAddress' => sub {
+post '/parse' => sub {
   my $c = shift;
-  my $text = $c->req->json('/text');
-  $c->render(json => { parsedPairs => [ parse_address($text) ] } );
+  my $string = $c->req->json('/string');
+  $c->render(json => [ parse_address($string) ] );
 };
 
-post '/expandAddress' => sub {
-  my $c = shift;
-  my $text = $c->req->json('/text');
-  $c->render(json => { expansions => [ expand_address($text) ] } );
-};
+group {
+  under '/api/v1';
+  post '/parseAddress' => sub {
+    my $c = shift;
+    my $text = $c->req->json('/text');
+    $c->render(json => { parsedPairs => [ parse_address($text) ] } );
+  };
 
-post '/expandAddressRoot' => sub {
-  my $c = shift;
-  my $text = $c->req->json('/text');
-  $c->render(json => { expansions => [ expand_address_root($text) ] } );
+  post '/expandAddress' => sub {
+    my $c = shift;
+    my $text = $c->req->json('/text');
+    $c->render(json => { expansions => [ expand_address($text) ] } );
+  };
+
+  post '/expandAddressRoot' => sub {
+    my $c = shift;
+    my $text = $c->req->json('/text');
+    $c->render(json => { expansions => [ expand_address_root($text) ] } );
+  };
 };
   
 
