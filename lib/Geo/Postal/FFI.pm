@@ -23,13 +23,10 @@ use FFI::Platypus;
 use FFI::CheckLib;
 use Geo::Postal::Structs;
 
-sub ffi {
-  #NOTE- do we really need an ffi singleton? It helps for sharing
-  #types, i guess
-  state $ffi = FFI::Platypus->new( api => 1 );
-}
-
-my $ffi = ffi;
+my $ffi = FFI::Platypus->new( api => 1 );
+$ffi->mangler(sub {
+  return "libpostal_$_[0]"
+});
 
 $ffi->lib(find_lib_or_die lib => 'postal');
 
@@ -41,10 +38,10 @@ $ffi->type("record(Geo::Postal::Structs::ParserResponse)" => 'parser_response');
 $ffi->type("record(Geo::Postal::Structs::Duplicates)" => 'duplicate_options');
 
 
-$ffi->function(libpostal_setup => [], 'bool')->call;
+$ffi->function(setup => [], 'bool')->call;
 
 
-$ffi->function(libpostal_setup_language_classifier  => [], 'bool')->call;
+$ffi->function(setup_language_classifier  => [], 'bool')->call;
 
 
 =method EXPANSION FUNCTIONS 
@@ -58,7 +55,7 @@ functions. Not intended to be used directly.
 
 =cut
 $ffi->attach(
-  [ libpostal_get_default_options => 'expansion_defaults' ],
+  [ get_default_options => 'expansion_defaults' ],
   [], 'expansion_options', );
 
 =method destroy_expansions
@@ -71,7 +68,7 @@ finally the array itself. Not intended to be used directly.
 =cut 
 
 $ffi->attach(
-  [ libpostal_expansion_array_destroy => 'destroy_expansions' ],
+  [ expansion_array_destroy => 'destroy_expansions' ],
   [ opaque => 'size_t' ], 'void');
   
 
@@ -113,10 +110,8 @@ there for more options.
 
 =cut
 
-$ffi->attach(
-  [ libpostal_expand_address => 'expand_address' ],
-  [ 'string', 'expansion_options', 'size_t*' ], 
-  'opaque', \&process_expansions );
+$ffi->attach('expand_address', [ 'string', 'expansion_options', 'size_t*' ] => 'opaque',
+  \&process_expansions );
 
 =method expand_address_root
 
@@ -132,10 +127,8 @@ but it could still happen).
 
 =cut
 
-$ffi->attach(
-  [ libpostal_expand_address_root => 'expand_address_root' ],
-  [ 'string', 'expansion_options', 'size_t*' ], 
-  'opaque', \&process_expansions );
+$ffi->attach('expand_address_root', [ 'string', 'expansion_options', 'size_t*' ] => 'opaque',
+  \&process_expansions );
 
 =method ADDRESS PARSING FUNCTIONS
 
@@ -146,11 +139,11 @@ parsing an address. Not intended to be used directly.
 
 =cut
 
-$ffi->attach( [ libpostal_get_address_parser_default_options =>
-    'parser_defaults' ], [], 'parser_options');
+$ffi->attach( [ get_address_parser_default_options => 'parser_defaults' ],
+  [] => 'parser_options');
 
-$ffi->attach( [ libpostal_address_parser_response_destroy =>
-    'destroy_parsings' ], [ 'opaque' ], 'void');
+$ffi->attach( [ address_parser_response_destroy => 'destroy_parsings' ],
+  [ 'opaque' ] => 'void');
 
 =method parse_address
 
@@ -179,14 +172,12 @@ request the local_parse_address function as a named import.
 =cut
 
 my $parser_loaded = 0;
-$ffi->attach( [ libpostal_setup_parser => 'load_parser' ],
-  [], 'bool', sub {
+$ffi->attach( [ setup_parser => 'load_parser' ], [] => 'bool', sub {
   my ($inner) = @_;
   $parser_loaded = $inner->() unless $parser_loaded;
 });
 
-$ffi->attach( [ libpostal_parse_address => 'parse_address' ],
-  [ 'string', 'parser_options' ] => 'opaque',
+$ffi->attach('parse_address', [ 'string', 'parser_options' ] => 'opaque',
   sub {
     my ($inner, @args) = @_;
     #lazy load the parser
@@ -221,9 +212,8 @@ Returns a C struct representing the default options for the generation of near d
 
 =cut
 
-$ffi->attach( 
-  [ libpostal_get_near_dupe_hash_default_options => 'hash_defaults' ], 
-  [ ], 'hash_options');
+$ffi->attach([ get_near_dupe_hash_default_options => 'hash_defaults' ], 
+  [] => 'hash_options');
 
 =method near_dupes
 
@@ -249,7 +239,7 @@ dictionaries.
 
 =cut
 
-$ffi->attach( [ libpostal_near_dupe_hashes => 'near_dupes' ],
+$ffi->attach( [ near_dupe_hashes => 'near_dupes' ],
   [ 'size_t', 'string[]', 'string[]', 'hash_options', 'size_t*' ] => 'opaque', 
   sub {
     my $inner = shift;
@@ -280,7 +270,7 @@ The hashes will only use terms from the languages provided in
 =cut
 
 $ffi->attach(
-  [ libpostal_near_dupe_hashes_languages => 'near_dupes_languages' ],
+  [ near_dupe_hashes_languages => 'near_dupes_languages' ],
   [ size_t => 'string[]', 'string[]', 'hash_options',
     size_t => 'string[]', 'size_t*' ],
   'opaque',
@@ -310,18 +300,18 @@ pairwise comparison of addresses. Not intended to be used directly.
 =cut
 
 
-$ffi->attach( [ libpostal_get_default_duplicate_options => 
-    'duplicate_defaults' ], [], 'duplicate_options');
+$ffi->attach( [ get_default_duplicate_options => 'duplicate_defaults' ],
+  [] => 'duplicate_options');
 
 =method is_duplicate
 
 
 =cut
 
-$ffi->attach( [ libpostal_is_toponym_duplicate => 'is_toponym_duplicate' ],
+$ffi->attach('is_toponym_duplicate',
   [ size_t => 'string[]', 'string[]',
     size_t => 'string[]', 'string[]',
-    'duplicate_options' ], 'senum',
+    'duplicate_options' ] => 'senum',
   sub {
     my ($inner, $labels1, $values1, $labels2, $values2, $opts) = @_;
     $opts //= duplicate_defaults();
@@ -340,19 +330,15 @@ sub dupe_defaults {
   $inner->(@args)
 }
 
-for (@duplicate_parts) {
-  $ffi->attach( [ "libpostal_is_${_}_duplicate" => "is_${_}_duplicate" ],
-    [ string => 'string', 'duplicate_options' ], 'senum', 
-    \&dupe_defaults );
-}
+$ffi->attach("is_${_}_duplicate", [ string => 'string', 'duplicate_options' ] => 'senum', 
+  \&dupe_defaults ) for (@duplicate_parts);
 
-$ffi->attach( [ libpostal_is_postal_code_duplicate => 
-    'is_postcode_duplicate' ], [ string => 'string', 'duplicate_options' ],
-  'senum', \&dupe_defaults );
+$ffi->attach( [ is_postal_code_duplicate => 'is_postcode_duplicate' ],
+  [ string => 'string', 'duplicate_options' ] => 'senum',
+  \&dupe_defaults );
 
 our @EXPORT = 
 qw/ 
-  ffi
   expansion_defaults expand_address_root expand_address
   hash_defaults near_dupes near_dupes_languages
   parser_defaults parse_address load_parser
@@ -362,12 +348,11 @@ qw/
 push @EXPORT, "is_${_}_duplicate" for @duplicate_parts;
 
 END { 
-  my $ffi = ffi;
-  $ffi->function(libpostal_teardown_parser => [], 'void')->call()
+  $ffi->function(teardown_parser => [], 'void')->call()
     if $parser_loaded;
-  $ffi->function(libpostal_teardown_language_classifier => [], 'void')
+  $ffi->function(teardown_language_classifier => [], 'void')
     ->call();
-  $ffi->function(libpostal_teardown => [], 'void')->call();
+  $ffi->function(teardown => [], 'void')->call();
 }
 
 'my work here is done'

@@ -32,7 +32,8 @@ subtest 'expansions' => sub {
     is $ref->element(0), 'en', 'returns right string';
     is $ref->element(1), 'ja', 'and second one too';
 
-    is ffi->cast( opaque => 'string[2]', $ref->opaque), [ qw/ en ja / ],
+    my $ffi = FFI::Platypus->new(api => 1);
+    is $ffi->cast( opaque => 'string[2]', $ref->opaque), [ qw/ en ja / ],
       'the array correctly represents our strings on roundtrip';
 
     is [ expand_address_root $check_addr, $ex_def ], 
