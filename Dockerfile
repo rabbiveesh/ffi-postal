@@ -2,14 +2,14 @@ FROM pelias/libpostal_baseimage as libpostal-build
 
 FROM perl:5.34.0 as dzil
 
-RUN cpanm -n App::cpm
-
-RUN cpm install -g Dist::Zilla
 WORKDIR /app
+RUN curl -fsSL --compressed https://git.io/cpm > cpm && chmod +x cpm
+
+RUN ./cpm install -g Dist::Zilla
 COPY ./dist.ini .  
-RUN dzil authordeps | cpm install -g -
+RUN dzil authordeps | ./cpm install -g -
 COPY . .
-RUN dzil listdeps | cpm install -
+RUN dzil listdeps | ./cpm install -
 
 FROM perl:5.34.0
 
