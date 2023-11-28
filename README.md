@@ -30,3 +30,15 @@ my @unique_addresses = parse_address(@address_list)
 where you parse a list of addresses and then get the hashes, and
 then group them, and then dedupe the whole lot so you only get
 fresh addresses.
+
+# Installation
+
+```
+$ dzil authordeps --missing | cpanm
+$ dzil listdeps --missing | cpanm
+$ dzil build
+# If you have installed libpostal.so in a nonstandard location, set FFI_CHECKLIB_PATH
+$ export FFI_CHECKLIB_PATH=/some/path/to/libpostal
+$ dzil test
+$ dzil install
+```
